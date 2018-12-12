@@ -1,0 +1,22 @@
+{
+  "name": "my-cripto",
+  "version": "1.0.0",
+  "description": "'Track my Binance coins'",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guilhrmefp/my-cripto.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/guilhrmefp/my-cripto/issues"
+  },
+  "homepage": "https://github.com/guilhrmefp/my-cripto#readme",
+  "dependencies": {
+    "axios": "^0.18.0"
+  }
+}
