@@ -17,7 +17,7 @@
     btn.addEventListener('click', () => {
       pre.textContent = 'Loading...';
 
-      fetch('http://localhost:3000/binance/api/v1/trades?symbol=POLYBTC&limit=1').then((response) => {
+      fetch('/binance/api/v1/trades?symbol=POLYBTC&limit=1').then((response) => {
         return response.json();
       }).then((data) => {
         pre.textContent = JSON.stringify(data, null, 2);

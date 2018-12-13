@@ -32,8 +32,8 @@ app.get('/binance/*', function (req, res) {
   .catch(function (error) {
     console.log(error);
   });
-})
+});
 
 app.listen(port, function () {
   console.log(`Listening on http://localhost:${port}`)
-})
+});
