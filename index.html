@@ -61,7 +61,7 @@
     user.addEventListener('click', () => {
       pre.textContent = 'Loading...';
 
-      fetch(`/private/api/v3/account?key=${key.value}&secret=${secret.value}`).then((response) => {
+      fetch(`/private/api/v3/allOrders?key=${key.value}&secret=${secret.value}`).then((response) => {
         return response.json();
       }).then((data) => {
         pre.textContent = JSON.stringify(data, null, 2);

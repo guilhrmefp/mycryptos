@@ -44,25 +44,30 @@ app.get('/public/*', function (req, res) {
 app.get('/private/*', function (req, res) {
   // const myURL = new URL(req.url);
   const myURL = url.parse(req.url);
-  const baseUrl = 'https://api.binance.com';
   const pathname = myURL.pathname.split('/private').pop();
+  const params = req.query;
+  const baseUrl = 'https://api.binance.com';
 
   const binanceConfig = {
-    API_KEY: req.query.key,
-    API_SECRET: req.query.secret,
+    API_KEY: params.key,
+    API_SECRET: params.secret,
     HOST_URL: baseUrl,
   };
 
   const timestamp = new Date().getTime();
 
-  const queryString = qs.stringify({timestamp: timestamp});
+  delete params.key;
+  delete params.secret;
+
+  params['timestamp'] = timestamp;
+
+  const queryString = qs.stringify(params);
   const signature = buildSignature(queryString, binanceConfig);
 
+  params['signature'] = signature;
+
   axios.get(baseUrl + pathname, {
-    params: {
-      timestamp: timestamp,
-      signature: signature
-    },
+    params: params,
     headers: {
       'X-MBX-APIKEY': binanceConfig.API_KEY
     }
