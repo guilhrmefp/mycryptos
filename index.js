@@ -3,6 +3,7 @@ const app = express()
 const port = process.env.PORT || 3000
 const bodyParser = require('body-parser')
 const axios = require('axios');
+const url = require('url');
 
 app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -12,10 +13,19 @@ app.use(function (req, res, next) {
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
-app.get('/binance', function (req, res) {
-  console.log(req, res)
+app.get('/', function (req, res) {
+  res.sendFile('index.html', { root: __dirname })
+});
 
-  axios.get('https://api.binance.com/api/v1/trades?symbol=POLYBTC&limit=1')
+app.get('/binance/*', function (req, res) {
+  // const myURL = new URL(req.url);
+  const myURL = url.parse(req.url);
+  const baseUrl = 'https://api.binance.com';
+  const pathname = myURL.pathname.split('/binance').pop();
+
+  axios.get(baseUrl + pathname, {
+    params: req.query
+  })
   .then(function (response) {
     res.json(response.data);
   })

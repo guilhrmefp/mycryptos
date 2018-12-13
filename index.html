@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <button>Get POLYBTC</button>
+  <pre></pre>
+
+  <script>
+    const btn = document.querySelector('button');
+    const pre = document.querySelector('pre');
+
+    btn.addEventListener('click', () => {
+      pre.textContent = 'Loading...';
+
+      fetch('http://localhost:3000/binance/api/v1/trades?symbol=POLYBTC&limit=1').then((response) => {
+        return response.json();
+      }).then((data) => {
+        pre.textContent = JSON.stringify(data, null, 2);
+      }).catch((error) => {
+        pre.textContent = 'Error. Check console.';
+        console.log(error);
+      })
+    });
+  </script>
+</body>
+</html>
