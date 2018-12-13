@@ -19,7 +19,8 @@
   "homepage": "https://github.com/guilhrmefp/my-cripto#readme",
   "dependencies": {
     "axios": "^0.18.0",
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "qs": "^6.6.0"
   },
   "devDependencies": {
     "@types/node": "^10.12.14"

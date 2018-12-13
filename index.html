@@ -4,20 +4,64 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>My Cripto</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+  </style>
 </head>
 <body>
-  <button>Get POLYBTC</button>
+  <label>
+    <span>Coin symbol</span>
+    <input type="text" id="symbol">
+  </label>
+  <label>
+    <span>API Key</span>
+    <input type="text" id="key">
+  </label>
+  <label>
+    <span>API Secret</span>
+    <input type="text" id="secret">
+  </label>
+
+  <button id="coin">Get COIN VALUE</button>
+  <button id="user">Get USER DATA</button>
+
   <pre></pre>
 
   <script>
-    const btn = document.querySelector('button');
+    const coin = document.querySelector('#coin');
+    const user = document.querySelector('#user');
     const pre = document.querySelector('pre');
 
-    btn.addEventListener('click', () => {
+    const symbol = document.querySelector('#symbol');
+    const key = document.querySelector('#key');
+    const secret = document.querySelector('#secret');
+
+    coin.addEventListener('click', () => {
       pre.textContent = 'Loading...';
 
-      fetch('/binance/api/v1/trades?symbol=POLYBTC&limit=1').then((response) => {
+      fetch(`/public/api/v1/ticker/price?symbol=${symbol.value}`).then((response) => {
+        return response.json();
+      }).then((data) => {
+        pre.textContent = JSON.stringify(data, null, 2);
+      }).catch((error) => {
+        pre.textContent = 'Error. Check console.';
+        console.log(error);
+      })
+    });
+
+    user.addEventListener('click', () => {
+      pre.textContent = 'Loading...';
+
+      fetch(`/private/api/v3/account?key=${key.value}&secret=${secret.value}`).then((response) => {
         return response.json();
       }).then((data) => {
         pre.textContent = JSON.stringify(data, null, 2);
