@@ -15,13 +15,23 @@
       display: block;
       margin-bottom: 5px;
     }
+
+    table th,
+    table td {
+      padding: 5px;
+      border: 1px solid #ddd;
+    }
+
+    .p {
+      color: green;
+    }
+
+    .n {
+      color: red;
+    }
   </style>
 </head>
 <body>
-  <label>
-    <span>Coin symbol</span>
-    <input type="text" id="symbol">
-  </label>
   <label>
     <span>API Key</span>
     <input type="text" id="key">
@@ -31,44 +41,108 @@
     <input type="text" id="secret">
   </label>
 
-  <button id="coin">Get COIN VALUE</button>
-  <button id="user">Get USER DATA</button>
+  <button id="btn-update">UPDATE</button>
 
-  <pre></pre>
+  <table>
+    <thead>
+      <tr>
+        <th>Coin</th>
+        <th>Qtd</th>
+        <th>Average price</th>
+        <th>Price</th>
+        <th>%</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script>
-    const coin = document.querySelector('#coin');
-    const user = document.querySelector('#user');
-    const pre = document.querySelector('pre');
-
-    const symbol = document.querySelector('#symbol');
+    const btnUpdate = document.querySelector('#btn-update');
     const key = document.querySelector('#key');
     const secret = document.querySelector('#secret');
+    const tBody = document.querySelector('table > tbody');
 
-    coin.addEventListener('click', () => {
-      pre.textContent = 'Loading...';
+    let accountData;
+    let funds;
+    let fundsCalc = [];
 
-      fetch(`/public/api/v1/ticker/price?symbol=${symbol.value}`).then((response) => {
+    btnUpdate.addEventListener('click', () => {
+      tBody.innerHTML = '<td colspan="5" align="center">Loading...</td>'
+
+      fetch(`/private/api/v3/account?key=${key.value}&secret=${secret.value}`).then((response) => {
         return response.json();
       }).then((data) => {
-        pre.textContent = JSON.stringify(data, null, 2);
-      }).catch((error) => {
-        pre.textContent = 'Error. Check console.';
-        console.log(error);
-      })
-    });
 
-    user.addEventListener('click', () => {
-      pre.textContent = 'Loading...';
+        accountData = data;
+        funds = accountData.balances.filter(e => parseFloat(e.free) > 0 && e.asset !== 'BTC');
 
-      fetch(`/private/api/v3/allOrders?key=${key.value}&secret=${secret.value}`).then((response) => {
-        return response.json();
-      }).then((data) => {
-        pre.textContent = JSON.stringify(data, null, 2);
+        funds.reduce((promise, item, index) => {
+          return promise.then(() => new Promise((resolve, reject) => {
+            const symbol = item.asset + 'BTC';
+            let averagePrice;
+            let price;
+
+            return fetch(`/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then((response) => {
+              return response.json();
+            }).then((data) => {
+
+              let totalPrice = 0;
+
+              data.forEach(item => {
+                totalPrice += parseFloat(item.price);
+              });
+
+              averagePrice = totalPrice / data.length;
+
+              return fetch(`/public/api/v1/ticker/price?symbol=${symbol}`).then((response) => {
+                return response.json();
+              }).then((data) => {
+
+                price = data.price;
+
+                fundsCalc.push({
+                  coin: item.asset,
+                  qtd: item.free,
+                  averagePrice: averagePrice,
+                  price: price
+                });
+
+                resolve();
+              }).catch((error) => {
+                console.log(error);
+                reject();
+              });
+            }).catch((error) => {
+              console.log(error);
+              reject();
+            });
+          })
+        )}, Promise.resolve()).then(() => {
+
+          let tableRow = '';
+
+          fundsCalc.forEach(item => {
+            const percentage = ((100 / parseFloat(item.averagePrice) * parseFloat(item.price)) - 100).toFixed(2);
+
+            tableRow += '<tr>';
+            tableRow += `<td>${item.coin}</td>`
+            tableRow += `<td>${item.qtd}</td>`
+            tableRow += `<td>${item.averagePrice}</td>`
+            tableRow += `<td>${item.price}</td>`
+            tableRow += `<td class="${percentage >= 0 ? 'p' : 'n'}">${percentage}</td>`
+            tableRow += `</tr>`
+
+          });
+
+          tBody.innerHTML = tableRow;
+
+        });
+
       }).catch((error) => {
-        pre.textContent = 'Error. Check console.';
         console.log(error);
-      })
+
+        tBody.innerHTML = '<td colspan="5" align="center">Error on loading.</td>';
+      });
     });
   </script>
 </body>
