@@ -67,7 +67,8 @@
     let fundsCalc = [];
 
     btnUpdate.addEventListener('click', () => {
-      tBody.innerHTML = '<td colspan="5" align="center">Loading...</td>'
+      tBody.innerHTML = '<td colspan="5" align="center">Loading...</td>';
+      fundsCalc = [];
 
       fetch(`/private/api/v3/account?key=${key.value}&secret=${secret.value}`).then((response) => {
         return response.json();
@@ -131,7 +132,6 @@
             tableRow += `<td>${item.price}</td>`
             tableRow += `<td class="${percentage >= 0 ? 'p' : 'n'}">${percentage}</td>`
             tableRow += `</tr>`
-
           });
 
           tBody.innerHTML = tableRow;
