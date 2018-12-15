@@ -87,8 +87,8 @@
       return number.toString().length < 10 ? parseFloat(number).toFixed(size) : number;
     }
 
-    const currencyFormat = (number) => {
-      return number.toLocaleString('pt-br', {style: 'currency', currency: 'BRL'});
+    const currencyFormat = (value, style, currency) => {
+      return value.toLocaleString(style, {style: 'currency', currency: currency});
     }
 
     const key = document.querySelector('#key');
@@ -102,7 +102,7 @@
     let accountData;
     let funds;
     let fundsCalc = [];
-    let brlPrice;
+    let BRLPrices;
 
     btnUpdate.addEventListener('click', () => {
       document.cookie = `key=${key.value};samesite=strict;max-age=604800`;
@@ -167,13 +167,13 @@
           fetch(`/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then(response => {
             return response.json();
           }).then(response => {
-            brlPrice = response;
+            BRLPrices = response;
 
-            for (coin in brlPrice.data) {
+            for (coin in BRLPrices.data) {
               const index = fundsCalc.map(e => e.coin).indexOf(coin);
 
               if (index > -1) {
-                fundsCalc[index]['brlPrice'] = brlPrice.data[coin].quote['BRL'].price;
+                fundsCalc[index]['BRLPrice'] = BRLPrices.data[coin].quote['BRL'].price;
               }
             }
           }).then(() => {
@@ -182,16 +182,16 @@
 
             fundsCalc.forEach(item => {
               const percentage = ((100 / parseFloat(item.averagePrice) * parseFloat(item.price)) - 100).toFixed(2);
-              const brlValue = parseFloat(item.qtd) * parseFloat(item.brlPrice);
+              const totalInBRL = parseFloat(item.qtd) * parseFloat(item.BRLPrice);
 
-              tableRow += '<tr>';
-              tableRow += `<td align="left">${item.coin}</td>`
-              tableRow += `<td align="right">${item.qtd}</td>`
-              tableRow += `<td align="right">${padRight(item.averagePrice, 8)}</td>`
-              tableRow += `<td align="right">${item.price}</td>`
-              tableRow += `<td align="right">${currencyFormat(brlValue)}</td>`
-              tableRow += `<td align="right" class="${percentage >= 0 ? 'p' : 'n'}">${percentage}</td>`
-              tableRow += `</tr>`
+              tableRow += `<tr>
+                             <td align="left">${item.coin}</td>
+                             <td align="right">${item.qtd}</td>
+                             <td align="right">${padRight(item.averagePrice, 8)}</td>
+                             <td align="right">${item.price}</td>
+                             <td align="right">${currencyFormat(totalInBRL, 'pt-br', 'BRL')}</td>
+                             <td align="right" class="${percentage >= 0 ? 'p' : 'n'}">${percentage}</td>
+                           </tr>`;
             });
 
             tBody.innerHTML = tableRow;
