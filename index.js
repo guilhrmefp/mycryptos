@@ -24,7 +24,6 @@ app.get('/', function (req, res) {
 });
 
 app.get('/public/*', function (req, res) {
-  // const myURL = new URL(req.url);
   const myURL = url.parse(req.url);
   const baseUrl = 'https://api.binance.com';
   const pathname = myURL.pathname.split('/public').pop();
@@ -42,7 +41,6 @@ app.get('/public/*', function (req, res) {
 });
 
 app.get('/private/*', function (req, res) {
-  // const myURL = new URL(req.url);
   const myURL = url.parse(req.url);
   const pathname = myURL.pathname.split('/private').pop();
   const params = req.query;
@@ -76,6 +74,28 @@ app.get('/private/*', function (req, res) {
     res.json(response.data);
   })
   .catch(function (error) {
+    console.log(error);
+    res.end();
+  });
+});
+
+app.get('/market/*', function (req, res) {
+  const myURL = url.parse(req.url);
+  const pathname = myURL.pathname.split('/market').pop();
+  const params = req.query;
+  const baseUrl = 'https://pro-api.coinmarketcap.com';
+  const hash = params.hash;
+
+  delete params.hash;
+
+  axios.get(baseUrl + pathname, {
+    params: params,
+    headers: {
+      'X-CMC_PRO_API_KEY': hash
+    }
+  }).then(response => {
+    res.json(response.data)
+  }).catch((error) => {
     console.log(error);
     res.end();
   });

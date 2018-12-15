@@ -16,9 +16,13 @@
       margin-bottom: 5px;
     }
 
+    table {
+      border-collapse: collapse;
+    }
+
     table th,
     table td {
-      padding: 5px;
+      padding: 10px;
       border: 1px solid #ddd;
     }
 
@@ -40,35 +44,73 @@
     <span>API Secret</span>
     <input type="text" id="secret">
   </label>
+  <label>
+    <span>API Hash</span>
+    <input type="text" id="hash">
+  </label>
 
   <button id="btn-update">UPDATE</button>
 
   <table>
     <thead>
       <tr>
-        <th>Coin</th>
-        <th>Qtd</th>
-        <th>Average price</th>
-        <th>Price</th>
-        <th>%</th>
+        <th align="left">Coin</th>
+        <th align="right">Quantity</th>
+        <th align="right">Average purchase price (BTC)</th>
+        <th align="right">Actual price (BTC)</th>
+        <th align="right">Total funds (BRL)</th>
+        <th align="right">%</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <script>
-    const btnUpdate = document.querySelector('#btn-update');
+    const getCookies = (key, secret, hash) => {
+      const cookies = document.cookie;
+      const cookiesObj = {};
+
+      if (cookies) {
+        cookies.split(';').forEach(item => {
+          const cookie = item.split('=');
+
+          cookiesObj[cookie[0].trim()] = cookie[1].trim();
+        });
+
+        key.value = cookiesObj.key ? cookiesObj.key : null;
+        secret.value = cookiesObj.secret ? cookiesObj.secret : null;
+        hash.value = cookiesObj.hash ? cookiesObj.hash : null;
+      }
+    }
+
+    const padRight = (number, size) => {
+      return number.toString().length < 10 ? parseFloat(number).toFixed(size) : number;
+    }
+
+    const currencyFormat = (number) => {
+      return number.toLocaleString('pt-br', {style: 'currency', currency: 'BRL'});
+    }
+
     const key = document.querySelector('#key');
     const secret = document.querySelector('#secret');
+    const hash = document.querySelector('#hash');
+    const btnUpdate = document.querySelector('#btn-update');
     const tBody = document.querySelector('table > tbody');
+
+    getCookies(key, secret, hash);
 
     let accountData;
     let funds;
     let fundsCalc = [];
+    let brlPrice;
 
     btnUpdate.addEventListener('click', () => {
-      tBody.innerHTML = '<td colspan="5" align="center">Loading...</td>';
+      document.cookie = `key=${key.value};samesite=strict;max-age=604800`;
+      document.cookie = `secret=${secret.value};samesite=strict;max-age=604800`;
+      document.cookie = `hash=${hash.value};samesite=strict;max-age=604800`;
+
       fundsCalc = [];
+      tBody.innerHTML = '<td colspan="6" align="center">Loading...</td>';
 
       fetch(`/private/api/v3/account?key=${key.value}&secret=${secret.value}`).then((response) => {
         return response.json();
@@ -102,7 +144,7 @@
                 price = data.price;
 
                 fundsCalc.push({
-                  coin: item.asset,
+                  coin: item.asset === 'BCHSV' ? 'BSV' : item.asset,
                   qtd: item.free,
                   averagePrice: averagePrice,
                   price: price
@@ -120,28 +162,49 @@
           })
         )}, Promise.resolve()).then(() => {
 
-          let tableRow = '';
+          const symbols = fundsCalc.map(e => e.coin).join(',');
 
-          fundsCalc.forEach(item => {
-            const percentage = ((100 / parseFloat(item.averagePrice) * parseFloat(item.price)) - 100).toFixed(2);
+          fetch(`/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then(response => {
+            return response.json();
+          }).then(response => {
+            brlPrice = response;
 
-            tableRow += '<tr>';
-            tableRow += `<td>${item.coin}</td>`
-            tableRow += `<td>${item.qtd}</td>`
-            tableRow += `<td>${item.averagePrice}</td>`
-            tableRow += `<td>${item.price}</td>`
-            tableRow += `<td class="${percentage >= 0 ? 'p' : 'n'}">${percentage}</td>`
-            tableRow += `</tr>`
+            for (coin in brlPrice.data) {
+              const index = fundsCalc.map(e => e.coin).indexOf(coin);
+
+              if (index > -1) {
+                fundsCalc[index]['brlPrice'] = brlPrice.data[coin].quote['BRL'].price;
+              }
+            }
+          }).then(() => {
+
+            let tableRow = '';
+
+            fundsCalc.forEach(item => {
+              const percentage = ((100 / parseFloat(item.averagePrice) * parseFloat(item.price)) - 100).toFixed(2);
+              const brlValue = parseFloat(item.qtd) * parseFloat(item.brlPrice);
+
+              tableRow += '<tr>';
+              tableRow += `<td align="left">${item.coin}</td>`
+              tableRow += `<td align="right">${item.qtd}</td>`
+              tableRow += `<td align="right">${padRight(item.averagePrice, 8)}</td>`
+              tableRow += `<td align="right">${item.price}</td>`
+              tableRow += `<td align="right">${currencyFormat(brlValue)}</td>`
+              tableRow += `<td align="right" class="${percentage >= 0 ? 'p' : 'n'}">${percentage}</td>`
+              tableRow += `</tr>`
+            });
+
+            tBody.innerHTML = tableRow;
+
+          }).catch(error => {
+            console.log(error);
           });
-
-          tBody.innerHTML = tableRow;
-
         });
 
       }).catch((error) => {
         console.log(error);
 
-        tBody.innerHTML = '<td colspan="5" align="center">Error on loading.</td>';
+        tBody.innerHTML = '<td colspan="6" align="center">Error on loading.</td>';
       });
     });
   </script>
