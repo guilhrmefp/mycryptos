@@ -51,6 +51,10 @@
 
   <button id="btn-update">UPDATE</button>
 
+  <hr>
+  <h3 id="btc">BTC: 0</h3>
+  <h3 id="brl">BRL: 0</h3>
+
   <table>
     <thead>
       <tr>
@@ -125,7 +129,7 @@
             let averagePrice;
             let price;
 
-            return fetch(`/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then((response) => {
+            fetch(`/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then((response) => {
               return response.json();
             }).then((data) => {
 
@@ -137,7 +141,7 @@
 
               averagePrice = totalPrice / data.length;
 
-              return fetch(`/public/api/v1/ticker/price?symbol=${symbol}`).then((response) => {
+              fetch(`/public/api/v1/ticker/price?symbol=${symbol}`).then((response) => {
                 return response.json();
               }).then((data) => {
 
@@ -178,11 +182,16 @@
             }
           }).then(() => {
 
+            let totalFoundsInBRL = 0;
+            let totalFoundsInBTC = 0;
             let tableRow = '';
 
             fundsCalc.forEach(item => {
               const percentage = ((100 / parseFloat(item.averagePrice) * parseFloat(item.price)) - 100).toFixed(2);
               const totalInBRL = parseFloat(item.qtd) * parseFloat(item.BRLPrice);
+
+              totalFoundsInBTC += parseFloat(item.qtd) * parseFloat(item.price);
+              totalFoundsInBRL += totalInBRL;
 
               tableRow += `<tr>
                              <td align="left">${item.coin}</td>
@@ -195,6 +204,8 @@
             });
 
             tBody.innerHTML = tableRow;
+            document.querySelector('#btc').innerText = `BTC: ${totalFoundsInBTC.toFixed(8)}`;
+            document.querySelector('#brl').innerText = `BRL: ${currencyFormat(totalFoundsInBRL, 'pt-br', 'BRL')}`;
 
           }).catch(error => {
             console.log(error);
