@@ -88,7 +88,7 @@
     }
 
     const padRight = (number, size) => {
-      return number.toString().length < 10 ? parseFloat(number).toFixed(size) : number;
+      return parseFloat(number).toFixed(size);
     }
 
     const currencyFormat = (value, style, currency) => {
@@ -134,12 +134,17 @@
             }).then((data) => {
 
               let totalPrice = 0;
+              let removeFromLength = 0;
 
               data.forEach(item => {
-                totalPrice += parseFloat(item.price);
+                if (item.side === 'BUY' && item.status === 'FILLED') {
+                  totalPrice += parseFloat(item.cummulativeQuoteQty) / parseFloat(item.executedQty);
+                } else {
+                  removeFromLength++;
+                }
               });
 
-              averagePrice = totalPrice / data.length;
+              averagePrice = totalPrice / (data.length - removeFromLength);
 
               fetch(`/public/api/v1/ticker/price?symbol=${symbol}`).then((response) => {
                 return response.json();
