@@ -121,7 +121,7 @@
       }).then((data) => {
 
         accountData = data;
-        funds = accountData.balances.filter(e => parseFloat(e.free) > 0 && e.asset !== 'BTC');
+        funds = accountData.balances.filter(e => parseFloat(e.free) + parseFloat(e.locked) > 0 && e.asset !== 'BTC');
 
         funds.reduce((promise, item, index) => {
           return promise.then(() => new Promise((resolve, reject) => {
@@ -154,7 +154,7 @@
 
                 fundsCalc.push({
                   coin: item.asset === 'BCHSV' ? 'BSV' : item.asset,
-                  qtd: item.free,
+                  qtd: parseFloat(item.free) + parseFloat(item.locked),
                   averagePrice: averagePrice,
                   price: price
                 });
