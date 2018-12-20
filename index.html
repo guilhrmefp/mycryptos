@@ -192,7 +192,7 @@
             BRLPrices = response;
 
             for (coin in BRLPrices.data) {
-              const index = fundsCalc.map(e => e.coin).indexOf(coin);
+              const index = fundsCalc.map(e => convertSymbol(e.coin)).indexOf(coin);
 
               if (index > -1) {
                 fundsCalc[index]['BRLPrice'] = BRLPrices.data[coin].quote['BRL'].price;
