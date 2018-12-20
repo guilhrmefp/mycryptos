@@ -95,6 +95,19 @@
       return value.toLocaleString(style, {style: 'currency', currency: currency});
     }
 
+    const convertSymbol = (symbol) => {
+      switch (symbol) {
+        case 'BCHSV':
+          return 'BSV';
+
+        case 'BCHABC':
+          return 'BCH';
+
+        default:
+          return symbol;
+      }
+    }
+
     const key = document.querySelector('#key');
     const secret = document.querySelector('#secret');
     const hash = document.querySelector('#hash');
@@ -153,7 +166,7 @@
                 price = data.price;
 
                 fundsCalc.push({
-                  coin: item.asset === 'BCHSV' ? 'BSV' : item.asset,
+                  coin: item.asset,
                   qtd: parseFloat(item.free) + parseFloat(item.locked),
                   averagePrice: averagePrice,
                   price: price
@@ -171,7 +184,7 @@
           })
         )}, Promise.resolve()).then(() => {
 
-          const symbols = fundsCalc.map(e => e.coin).join(',');
+          const symbols = fundsCalc.map(e => convertSymbol(e.coin)).join(',');
 
           fetch(`/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then(response => {
             return response.json();
