@@ -149,18 +149,19 @@
               return response.json();
             }).then((data) => {
 
+              let total = 0;
               let totalPrice = 0;
-              let removeFromLength = 0;
+              let totalQtd = 0;
 
               data.forEach(item => {
                 if (item.side === 'BUY' && item.status === 'FILLED') {
-                  totalPrice += parseFloat(item.cummulativeQuoteQty) / parseFloat(item.executedQty);
-                } else {
-                  removeFromLength++;
+                  totalPrice += parseFloat(item.cummulativeQuoteQty);
+                  totalQtd += parseFloat(item.executedQty);
+                  total++
                 }
               });
 
-              averagePrice = totalPrice / (data.length - removeFromLength);
+              averagePrice = totalPrice / totalQtd;
 
               fetch(`/public/api/v1/ticker/price?symbol=${symbol}`).then((response) => {
                 return response.json();
