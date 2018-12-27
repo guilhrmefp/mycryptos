@@ -150,14 +150,23 @@
             }).then((data) => {
 
               let total = 0;
-              let totalPrice = 0;
               let totalQtd = 0;
+              let totalPrice = 0;
 
               data.forEach(item => {
                 if (item.side === 'BUY' && item.status === 'FILLED') {
                   totalPrice += parseFloat(item.cummulativeQuoteQty);
                   totalQtd += parseFloat(item.executedQty);
                   total++
+                } else if (item.side === 'SELL' && item.status === 'FILLED') {
+                  totalQtd -= parseFloat(item.executedQty);
+                  total++
+                }
+
+                if (totalQtd <= 0) {
+                  total = 0;
+                  totalQtd = 0;
+                  totalPrice = 0;
                 }
               });
 
