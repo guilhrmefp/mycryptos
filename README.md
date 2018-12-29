@@ -1,2 +1,2 @@
-# my-cripto
-Track my Binance coins
+# mycryptos
+Track my Binance coins.
