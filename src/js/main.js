@@ -1,29 +1,33 @@
-import { env } from '../env/env.js';
+import { env } from '../env/env';
 
 const getCookies = (key, secret, hash) => {
   const cookies = document.cookie;
   const cookiesObj = {};
 
+  const inputKey = key;
+  const inputSecret = secret;
+  const inputHash = hash;
+
   if (cookies) {
-    cookies.split(';').forEach(item => {
+    cookies.split(';').forEach((item) => {
       const cookie = item.split('=');
 
       cookiesObj[cookie[0].trim()] = cookie[1].trim();
     });
 
-    key.value = cookiesObj.key ? cookiesObj.key : null;
-    secret.value = cookiesObj.secret ? cookiesObj.secret : null;
-    hash.value = cookiesObj.hash ? cookiesObj.hash : null;
+    inputKey.value = cookiesObj.key ? cookiesObj.key : null;
+    inputSecret.value = cookiesObj.secret ? cookiesObj.secret : null;
+    inputHash.value = cookiesObj.hash ? cookiesObj.hash : null;
   }
-}
+};
 
-const padRight = (number, size) => {
-  return parseFloat(number).toFixed(size);
-}
+const padRight = (number, size) => (
+  parseFloat(number).toFixed(size)
+);
 
-const currencyFormat = (value, style, currency) => {
-  return value.toLocaleString(style, {style: 'currency', currency: currency});
-}
+const currencyFormat = (value, style, currency) => (
+  value.toLocaleString(style, { style: 'currency', currency })
+);
 
 const convertSymbol = (symbol) => {
   switch (symbol) {
@@ -39,7 +43,7 @@ const convertSymbol = (symbol) => {
     default:
       return symbol;
   }
-}
+};
 
 const key = document.querySelector('#key');
 const secret = document.querySelector('#secret');
@@ -63,46 +67,43 @@ btnUpdate.addEventListener('click', () => {
   tBody.innerHTML = '<td colspan="6" align="center">Loading...</td>';
 
   fetch(`${env.api}/private/api/v3/account?key=${key.value}&secret=${secret.value}`).then((response) => {
-    return response.json();
-  }).then((data) => {
-
-    accountData = data;
+    accountData = response.json();
     funds = accountData.balances.filter(e => parseFloat(e.free) + parseFloat(e.locked) > 0 && e.asset !== 'BTC');
 
-    funds.reduce((promise, item, index) => {
-      return promise.then(() => new Promise((resolve, reject) => {
-        const symbol = item.asset + 'BTC';
+    funds.reduce((promise, item) => (
+      promise.then(() => new Promise((resolve, reject) => {
+        const symbol = `${item.asset} BTC`;
+
         let averagePrice;
         let price;
 
-        fetch(`${env.api}/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then((response) => {
-          return response.json();
-        }).then((data) => {
+        fetch(`${env.api}/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then((symbolOrders) => {
+          const data = symbolOrders.json();
 
           let totalPrice = 0;
           let removeFromLength = 0;
 
-          data.forEach(item => {
-            if (item.side === 'BUY' && item.status === 'FILLED') {
-              totalPrice += parseFloat(item.cummulativeQuoteQty) / parseFloat(item.executedQty);
+          data.forEach((order) => {
+            if (order.side === 'BUY' && order.status === 'FILLED') {
+              totalPrice += parseFloat(order.cummulativeQuoteQty) / parseFloat(order.executedQty);
             } else {
-              removeFromLength++;
+              removeFromLength += 1;
             }
           });
 
           averagePrice = totalPrice / (data.length - removeFromLength);
 
-          fetch(`${env.api}/public/api/v1/ticker/price?symbol=${symbol}`).then((response) => {
-            return response.json();
-          }).then((data) => {
+          fetch(`${env.api}/public/api/v1/ticker/price?symbol=${symbol}`).then((symbolPrice) => {
+            const ticker = symbolPrice.json();
 
-            price = data.price;
+            // object destructuring
+            ({ price } = ticker);
 
             fundsCalc.push({
               coin: item.asset,
               qtd: parseFloat(item.free) + parseFloat(item.locked),
-              averagePrice: averagePrice,
-              price: price
+              averagePrice,
+              price,
             });
 
             resolve();
@@ -114,31 +115,29 @@ btnUpdate.addEventListener('click', () => {
           console.log(error);
           reject();
         });
-      })
-    )}, Promise.resolve()).then(() => {
-
+      }))
+    ), Promise.resolve()).then(() => {
       const symbols = fundsCalc.map(e => convertSymbol(e.coin)).join(',');
 
-      fetch(`${env.api}/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then(response => {
-        return response.json();
-      }).then(response => {
-        BRLPrices = response;
+      fetch(`${env.api}/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then((symbolsPriceInBRL) => {
+        BRLPrices = symbolsPriceInBRL.json();
 
-        for (const coin in BRLPrices.data) {
-          const index = fundsCalc.map(e => convertSymbol(e.coin)).indexOf(coin);
+        const BRLPricesSymbols = Object.keys(BRLPrices.data);
+
+        BRLPricesSymbols.forEach((symbol) => {
+          const index = fundsCalc.map(e => convertSymbol(e.coin)).indexOf(symbol);
 
           if (index > -1) {
-            fundsCalc[index]['BRLPrice'] = BRLPrices.data[coin].quote['BRL'].price;
+            fundsCalc[index].BRLPrice = BRLPrices.data[symbol].quote.BRL.price;
           }
-        }
+        });
       }).then(() => {
-
         let totalFoundsInBRL = 0;
         let totalFoundsInBTC = 0;
         let tableRow = '';
 
-        fundsCalc.forEach(item => {
-          const percentage = ((100 / parseFloat(item.averagePrice) * parseFloat(item.price)) - 100).toFixed(2);
+        fundsCalc.forEach((item) => {
+          const percentage = (100 / parseFloat(item.averagePrice) * parseFloat(item.price)) - 100;
           const totalInBRL = parseFloat(item.qtd) * parseFloat(item.BRLPrice);
 
           totalFoundsInBTC += parseFloat(item.qtd) * parseFloat(item.price);
@@ -150,19 +149,17 @@ btnUpdate.addEventListener('click', () => {
                           <td align="right">${padRight(item.averagePrice, 8)}</td>
                           <td align="right">${item.price}</td>
                           <td align="right">${currencyFormat(totalInBRL, 'pt-br', 'BRL')}</td>
-                          <td align="right" class="${percentage >= 0 ? 'p' : 'n'}">${percentage}</td>
+                          <td align="right" class="${percentage >= 0 ? 'p' : 'n'}">${padRight(percentage, 2)}</td>
                         </tr>`;
         });
 
         tBody.innerHTML = tableRow;
         document.querySelector('#btc').innerText = `BTC: ${totalFoundsInBTC.toFixed(8)}`;
         document.querySelector('#brl').innerText = `BRL: ${currencyFormat(totalFoundsInBRL, 'pt-br', 'BRL')}`;
-
-      }).catch(error => {
+      }).catch((error) => {
         console.log(error);
       });
     });
-
   }).catch((error) => {
     console.log(error);
 
