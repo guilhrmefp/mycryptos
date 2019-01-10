@@ -6,10 +6,10 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const devMode = process.env.NODE_ENV !== 'production';
 
 module.exports = {
-  entry: ['./src/app.js', './src/scss/main.scss'],
+  entry: ['./src/js/main.js', './src/scss/main.scss'],
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'js/main.js'
+    filename: 'js/main.js',
   },
   module: {
     rules: [
@@ -20,22 +20,22 @@ module.exports = {
             loader: devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
           },
           {
-            loader: 'css-loader'
+            loader: 'css-loader',
           },
           {
-            loader: 'sass-loader'
+            loader: 'sass-loader',
           },
-        ]
-      }
-    ]
+        ],
+      },
+    ],
   },
   plugins: [
     new CleanWebpackPlugin(['dist']),
     new HtmlWebpackPlugin({
-      template: './index.html'
+      template: './src/index.html',
     }),
     new MiniCssExtractPlugin({
-      filename: "css/[name].css"
-    })
-  ]
+      filename: 'css/[name].css',
+    }),
+  ],
 };

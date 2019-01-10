@@ -6,6 +6,7 @@ module.exports = {
     "browser": true
   },
   "rules": {
-    "linebreak-style": ["error", "windows"]
+    "linebreak-style": ["error", "windows"],
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": true}]
   }
 };
