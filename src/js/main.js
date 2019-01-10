@@ -67,7 +67,7 @@ btnUpdate.addEventListener('click', () => {
   tBody.innerHTML = '<td colspan="6" align="center">Loading...</td>';
 
   fetch(`${apiUrl}/private/api/v3/account?key=${key.value}&secret=${secret.value}`).then(response => response.json()).then((response) => {
-    accountData = response.json();
+    accountData = response;
     funds = accountData.balances.filter(e => parseFloat(e.free) + parseFloat(e.locked) > 0 && e.asset !== 'BTC');
 
     funds.reduce((promise, item) => (
