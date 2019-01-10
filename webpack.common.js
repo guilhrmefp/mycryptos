@@ -2,6 +2,7 @@ const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const webpack = require('webpack');
 
 const devMode = process.env.NODE_ENV !== 'production';
 
@@ -37,5 +38,9 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: 'css/[name].css',
     }),
+    new webpack.NormalModuleReplacementPlugin(
+      /.\/src\/env\/env\.js/,
+      './src/env/env.prod.js',
+    ),
   ],
 };
