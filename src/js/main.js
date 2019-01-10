@@ -1,4 +1,4 @@
-import { env } from '../env/env';
+const apiUrl = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000';
 
 const getCookies = (key, secret, hash) => {
   const cookies = document.cookie;
@@ -66,7 +66,7 @@ btnUpdate.addEventListener('click', () => {
   fundsCalc = [];
   tBody.innerHTML = '<td colspan="6" align="center">Loading...</td>';
 
-  fetch(`${env.api}/private/api/v3/account?key=${key.value}&secret=${secret.value}`).then((response) => {
+  fetch(`${apiUrl}/private/api/v3/account?key=${key.value}&secret=${secret.value}`).then((response) => {
     accountData = response.json();
     funds = accountData.balances.filter(e => parseFloat(e.free) + parseFloat(e.locked) > 0 && e.asset !== 'BTC');
 
@@ -77,7 +77,7 @@ btnUpdate.addEventListener('click', () => {
         let averagePrice;
         let price;
 
-        fetch(`${env.api}/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then((symbolOrders) => {
+        fetch(`${apiUrl}/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then((symbolOrders) => {
           const data = symbolOrders.json();
 
           let totalPrice = 0;
@@ -93,7 +93,7 @@ btnUpdate.addEventListener('click', () => {
 
           averagePrice = totalPrice / (data.length - removeFromLength);
 
-          fetch(`${env.api}/public/api/v1/ticker/price?symbol=${symbol}`).then((symbolPrice) => {
+          fetch(`${apiUrl}/public/api/v1/ticker/price?symbol=${symbol}`).then((symbolPrice) => {
             const ticker = symbolPrice.json();
 
             // object destructuring
@@ -119,7 +119,7 @@ btnUpdate.addEventListener('click', () => {
     ), Promise.resolve()).then(() => {
       const symbols = fundsCalc.map(e => convertSymbol(e.coin)).join(',');
 
-      fetch(`${env.api}/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then((symbolsPriceInBRL) => {
+      fetch(`${apiUrl}/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then((symbolsPriceInBRL) => {
         BRLPrices = symbolsPriceInBRL.json();
 
         const BRLPricesSymbols = Object.keys(BRLPrices.data);
