@@ -72,7 +72,7 @@ btnUpdate.addEventListener('click', () => {
 
     funds.reduce((promise, item) => (
       promise.then(() => new Promise((resolve, reject) => {
-        const symbol = `${item.asset} BTC`;
+        const symbol = `${item.asset}BTC`;
 
         let averagePrice;
         let price;
