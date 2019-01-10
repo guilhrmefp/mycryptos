@@ -77,8 +77,8 @@ btnUpdate.addEventListener('click', () => {
         let averagePrice;
         let price;
 
-        fetch(`${apiUrl}/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then((symbolOrders) => {
-          const data = symbolOrders.json();
+        fetch(`${apiUrl}/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then(symbolOrders => symbolOrders.json()).then((symbolOrders) => {
+          const data = symbolOrders;
 
           let totalPrice = 0;
           let removeFromLength = 0;
@@ -93,8 +93,8 @@ btnUpdate.addEventListener('click', () => {
 
           averagePrice = totalPrice / (data.length - removeFromLength);
 
-          fetch(`${apiUrl}/public/api/v1/ticker/price?symbol=${symbol}`).then((symbolPrice) => {
-            const ticker = symbolPrice.json();
+          fetch(`${apiUrl}/public/api/v1/ticker/price?symbol=${symbol}`).then(symbolPrice => symbolPrice.json()).then((symbolPrice) => {
+            const ticker = symbolPrice;
 
             // object destructuring
             ({ price } = ticker);
@@ -119,8 +119,8 @@ btnUpdate.addEventListener('click', () => {
     ), Promise.resolve()).then(() => {
       const symbols = fundsCalc.map(e => convertSymbol(e.coin)).join(',');
 
-      fetch(`${apiUrl}/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then((symbolsPriceInBRL) => {
-        BRLPrices = symbolsPriceInBRL.json();
+      fetch(`${apiUrl}/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then(symbolsPriceInBRL => symbolsPriceInBRL.json()).then((symbolsPriceInBRL) => {
+        BRLPrices = symbolsPriceInBRL;
 
         const BRLPricesSymbols = Object.keys(BRLPrices.data);
 
@@ -156,9 +156,10 @@ btnUpdate.addEventListener('click', () => {
         tBody.innerHTML = tableRow;
         document.querySelector('#btc').innerText = `BTC: ${totalFoundsInBTC.toFixed(8)}`;
         document.querySelector('#brl').innerText = `BRL: ${currencyFormat(totalFoundsInBRL, 'pt-br', 'BRL')}`;
-      }).catch((error) => {
-        console.log(error);
-      });
+      })
+        .catch((error) => {
+          console.log(error);
+        });
     });
   }).catch((error) => {
     console.log(error);
