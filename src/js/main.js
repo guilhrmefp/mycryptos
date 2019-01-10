@@ -1,5 +1,7 @@
 import { env } from '../env/env';
 
+console.log(process.env.NODE_ENV);
+
 const getCookies = (key, secret, hash) => {
   const cookies = document.cookie;
   const cookiesObj = {};
