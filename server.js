@@ -23,13 +23,13 @@ const buildSignature = (data, config) => (
 );
 
 app.get('/*', (req, res, next) => {
-  const reqPath = url.parse(req.url);
+  const reqURL = url.parse(req.url);
 
   const routes = ['public', 'private', 'market'];
 
-  if (reqPath.pathname === '/') {
+  if (reqURL.pathname === '/') {
     res.sendFile('dist/index.html', { root: __dirname });
-  } else if (routes.some(e => reqPath.pathname.indexOf(e) > -1)) {
+  } else if (routes.some(e => reqURL.pathname.indexOf(e) > -1)) {
     next();
   } else {
     req.url = `/static/dist${req.url}`;
