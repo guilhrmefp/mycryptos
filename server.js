@@ -104,7 +104,7 @@ app.get('/public/*', (req, res) => {
     })
     .catch((error) => {
       console.log(error);
-      res.end();
+      res.status(error.response.status).json(error.response.data);
     });
 });
 
@@ -143,7 +143,7 @@ app.get('/private/*', (req, res) => {
     })
     .catch((error) => {
       console.log(error);
-      res.end();
+      res.status(error.response.status).json(error.response.data);
     });
 });
 
