@@ -25,9 +25,10 @@
   },
   "homepage": "https://github.com/guilhrmefp/mycryptos#readme",
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.24.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
+    "nodemon": "^2.0.14",
     "qs": "^6.6.0"
   },
   "devDependencies": {
