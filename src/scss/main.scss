@@ -1,0 +1,29 @@
+@import '~normalize.css';
+@import 'variables';
+
+body {
+  font-family: sans-serif;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+table th,
+table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.p {
+  color: $p-color;
+}
+
+.n {
+  color: $n-color;
+}
