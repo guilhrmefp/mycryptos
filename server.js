@@ -125,26 +125,34 @@ app.get('/private/*', (req, res) => {
   delete params.key;
   delete params.secret;
 
-  params.timestamp = timestamp;
+  // params.timestamp = timestamp;
 
-  const queryString = qs.stringify(params);
-  const signature = buildSignature(queryString, binanceConfig);
+  const getData = async function () {
+    const time = await axios.get(baseUrl + '/api/v3/time');
+    const { serverTime } = time.data;
 
-  params.signature = signature;
+    params.timestamp = serverTime;
+    const queryString = qs.stringify(params);
+    const signature = buildSignature(queryString, binanceConfig);
 
-  axios.get(baseUrl + pathname, {
-    params,
-    headers: {
-      'X-MBX-APIKEY': binanceConfig.API_KEY,
-    },
-  })
-    .then((response) => {
-      res.json(response.data);
+    params.signature = signature;
+
+    axios.get(baseUrl + pathname, {
+      params,
+      headers: {
+        'X-MBX-APIKEY': binanceConfig.API_KEY,
+      },
     })
-    .catch((error) => {
-      console.log(error);
-      res.status(error.response.status).json(error.response.data);
-    });
+      .then((response) => {
+        res.json(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(error.response.status).json(error.response.data);
+      });
+  }
+
+  getData();
 });
 
 app.get('/market/*', (req, res) => {

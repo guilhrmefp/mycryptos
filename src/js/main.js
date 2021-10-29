@@ -66,104 +66,106 @@ btnUpdate.addEventListener('click', () => {
   fundsCalc = [];
   tBody.innerHTML = '<td colspan="6" align="center">Loading...</td>';
 
-  fetch(`${apiUrl}/private/api/v3/account?key=${key.value}&secret=${secret.value}`).then(response => response.json()).then((response) => {
-    accountData = response;
-    funds = accountData.balances.filter(e => parseFloat(e.free) + parseFloat(e.locked) > 0 && e.asset !== 'BTC');
+  fetch(`${apiUrl}/private/api/v3/account?key=${key.value}&secret=${secret.value}`)
+    .then(response => response.json())
+    .then((response) => {
+      accountData = response;
+      funds = accountData.balances.filter(e => parseFloat(e.free) + parseFloat(e.locked) > 0 && e.asset !== 'BTC');
 
-    funds.reduce((promise, item) => (
-      promise.then(() => new Promise((resolve, reject) => {
-        const symbol = `${item.asset}BTC`;
+      funds.reduce((promise, item) => (
+        promise.then(() => new Promise((resolve, reject) => {
+          const symbol = `${item.asset}BTC`;
 
-        let averagePrice;
-        let price;
+          let averagePrice;
+          let price;
 
-        fetch(`${apiUrl}/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then(symbolOrders => symbolOrders.json()).then((symbolOrders) => {
-          const data = symbolOrders;
+          fetch(`${apiUrl}/private/api/v3/allOrders?symbol=${symbol}&key=${key.value}&secret=${secret.value}`).then(symbolOrders => symbolOrders.json()).then((symbolOrders) => {
+            const data = symbolOrders;
 
-          let totalPrice = 0;
-          let removeFromLength = 0;
+            let totalPrice = 0;
+            let removeFromLength = 0;
 
-          data.forEach((order) => {
-            if (order.side === 'BUY' && order.status === 'FILLED') {
-              totalPrice += parseFloat(order.cummulativeQuoteQty) / parseFloat(order.executedQty);
-            } else {
-              removeFromLength += 1;
-            }
-          });
-
-          averagePrice = totalPrice / (data.length - removeFromLength);
-
-          fetch(`${apiUrl}/public/api/v1/ticker/price?symbol=${symbol}`).then(symbolPrice => symbolPrice.json()).then((symbolPrice) => {
-            const ticker = symbolPrice;
-
-            // object destructuring
-            ({ price } = ticker);
-
-            fundsCalc.push({
-              coin: item.asset,
-              qtd: parseFloat(item.free) + parseFloat(item.locked),
-              averagePrice,
-              price,
+            data.forEach((order) => {
+              if (order.side === 'BUY' && order.status === 'FILLED') {
+                totalPrice += parseFloat(order.cummulativeQuoteQty) / parseFloat(order.executedQty);
+              } else {
+                removeFromLength += 1;
+              }
             });
 
-            resolve();
+            averagePrice = totalPrice / (data.length - removeFromLength);
+
+            fetch(`${apiUrl}/public/api/v1/ticker/price?symbol=${symbol}`).then(symbolPrice => symbolPrice.json()).then((symbolPrice) => {
+              const ticker = symbolPrice;
+
+              // object destructuring
+              ({ price } = ticker);
+
+              fundsCalc.push({
+                coin: item.asset,
+                qtd: parseFloat(item.free) + parseFloat(item.locked),
+                averagePrice,
+                price,
+              });
+
+              resolve();
+            }).catch((error) => {
+              console.log(error);
+              reject();
+            });
           }).catch((error) => {
             console.log(error);
             reject();
           });
-        }).catch((error) => {
-          console.log(error);
-          reject();
-        });
-      }))
-    ), Promise.resolve()).then(() => {
-      const symbols = fundsCalc.map(e => convertSymbol(e.coin)).join(',');
+        }))
+      ), Promise.resolve()).then(() => {
+        const symbols = fundsCalc.map(e => convertSymbol(e.coin)).join(',');
 
-      fetch(`${apiUrl}/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then(symbolsPriceInBRL => symbolsPriceInBRL.json()).then((symbolsPriceInBRL) => {
-        BRLPrices = symbolsPriceInBRL;
+        fetch(`${apiUrl}/market/v1/cryptocurrency/quotes/latest?symbol=${symbols}&convert=BRL&hash=${hash.value}`).then(symbolsPriceInBRL => symbolsPriceInBRL.json()).then((symbolsPriceInBRL) => {
+          BRLPrices = symbolsPriceInBRL;
 
-        const BRLPricesSymbols = Object.keys(BRLPrices.data);
+          const BRLPricesSymbols = Object.keys(BRLPrices.data);
 
-        BRLPricesSymbols.forEach((symbol) => {
-          const index = fundsCalc.map(e => convertSymbol(e.coin)).indexOf(symbol);
+          BRLPricesSymbols.forEach((symbol) => {
+            const index = fundsCalc.map(e => convertSymbol(e.coin)).indexOf(symbol);
 
-          if (index > -1) {
-            fundsCalc[index].BRLPrice = BRLPrices.data[symbol].quote.BRL.price;
-          }
-        });
-      }).then(() => {
-        let totalFoundsInBRL = 0;
-        let totalFoundsInBTC = 0;
-        let tableRow = '';
+            if (index > -1) {
+              fundsCalc[index].BRLPrice = BRLPrices.data[symbol].quote.BRL.price;
+            }
+          });
+        }).then(() => {
+          let totalFoundsInBRL = 0;
+          let totalFoundsInBTC = 0;
+          let tableRow = '';
 
-        fundsCalc.forEach((item) => {
-          const percentage = (100 / parseFloat(item.averagePrice) * parseFloat(item.price)) - 100;
-          const totalInBRL = parseFloat(item.qtd) * parseFloat(item.BRLPrice);
+          fundsCalc.forEach((item) => {
+            const percentage = (100 / parseFloat(item.averagePrice) * parseFloat(item.price)) - 100;
+            const totalInBRL = parseFloat(item.qtd) * parseFloat(item.BRLPrice);
 
-          totalFoundsInBTC += parseFloat(item.qtd) * parseFloat(item.price);
-          totalFoundsInBRL += totalInBRL;
+            totalFoundsInBTC += parseFloat(item.qtd) * parseFloat(item.price);
+            totalFoundsInBRL += totalInBRL;
 
-          tableRow += `<tr>
-                          <td align="left">${item.coin}</td>
-                          <td align="right">${item.qtd}</td>
-                          <td align="right">${padRight(item.averagePrice, 8)}</td>
-                          <td align="right">${item.price}</td>
-                          <td align="right">${currencyFormat(totalInBRL, 'pt-br', 'BRL')}</td>
-                          <td align="right" class="${percentage >= 0 ? 'p' : 'n'}">${padRight(percentage, 2)}</td>
-                        </tr>`;
-        });
+            tableRow += `<tr>
+                            <td align="left">${item.coin}</td>
+                            <td align="right">${item.qtd}</td>
+                            <td align="right">${padRight(item.averagePrice, 8)}</td>
+                            <td align="right">${item.price}</td>
+                            <td align="right">${currencyFormat(totalInBRL, 'pt-br', 'BRL')}</td>
+                            <td align="right" class="${percentage >= 0 ? 'p' : 'n'}">${padRight(percentage, 2)}</td>
+                          </tr>`;
+          });
 
-        tBody.innerHTML = tableRow;
-        document.querySelector('#btc').innerText = `BTC: ${totalFoundsInBTC.toFixed(8)}`;
-        document.querySelector('#brl').innerText = `BRL: ${currencyFormat(totalFoundsInBRL, 'pt-br', 'BRL')}`;
-      })
-        .catch((error) => {
-          console.log(error);
-        });
+          tBody.innerHTML = tableRow;
+          document.querySelector('#btc').innerText = `BTC: ${totalFoundsInBTC.toFixed(8)}`;
+          document.querySelector('#brl').innerText = `BRL: ${currencyFormat(totalFoundsInBRL, 'pt-br', 'BRL')}`;
+        })
+          .catch((error) => {
+            console.log(error);
+          });
+      });
+    }).catch((error) => {
+      console.log(error);
+
+      tBody.innerHTML = '<td colspan="6" align="center">Error on loading.</td>';
     });
-  }).catch((error) => {
-    console.log(error);
-
-    tBody.innerHTML = '<td colspan="6" align="center">Error on loading.</td>';
-  });
 });
